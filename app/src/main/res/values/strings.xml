@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">AppList</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_export">Export all data as JSON</string>
+    <string name="action_export_min">Export Names</string>
+    <string name="ok">OK</string>
+    <string name="first_run_popup"><b>Tap</b> to open the app\'s Play Store page \n\n<b>Long Press</b> to uninstall\n\nI suggest exporting the names to <b>Google Keep</b> or a similar program for now</string>
+
+</resources>
