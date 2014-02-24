@@ -124,11 +124,7 @@ public class AppListFragment extends Fragment {
                 }.getType();
                 String json = mGson.toJson(mApplicationList, myType);
                 Log.d(TAG, json);
-                sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT, json);
-                sendIntent.putExtra(Intent.EXTRA_TITLE, "Installed Applications");
-                sendIntent.setType("text/plain");
-                startActivity(sendIntent);
                 break;
             case R.id.action_export_min:
                 String names = "";
@@ -136,15 +132,13 @@ public class AppListFragment extends Fragment {
                     names += listItem.getApplicationName() + '\n';
                 }
                 Log.d(TAG, names);
-
-                sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT, names);
-                sendIntent.putExtra(Intent.EXTRA_TITLE, "Installed Applications");
-                sendIntent.setType("text/plain");
-                startActivity(sendIntent);
                 break;
         }
+        sendIntent.putExtra(Intent.EXTRA_TITLE, "Installed Applications");
+        sendIntent.setType("text/plain");
+        sendIntent.setAction(Intent.ACTION_SEND);
+        startActivity(sendIntent);
         return super.onOptionsItemSelected(item);
     }
 
