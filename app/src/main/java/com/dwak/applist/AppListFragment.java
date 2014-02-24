@@ -118,23 +118,26 @@ public class AppListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         Intent sendIntent = new Intent();
+        String shareData = "";
         switch (id) {
             case R.id.action_export:
                 Type myType = new TypeToken<ArrayList<AppListItem>>() {
                 }.getType();
-                String json = mGson.toJson(mApplicationList, myType);
-                Log.d(TAG, json);
-                sendIntent.putExtra(Intent.EXTRA_TEXT, json);
                 break;
             case R.id.action_export_min:
-                String names = "";
                 for(AppListItem listItem : mApplicationList){
-                    names += listItem.getApplicationName() + '\n';
+                    shareData += listItem.getApplicationName() + '\n';
                 }
-                Log.d(TAG, names);
-                sendIntent.putExtra(Intent.EXTRA_TEXT, names);
+                Log.d(TAG, shareData);
+                break;
+            case R.id.action_export_play_store:
+                for(AppListItem listItem : mApplicationList){
+                    shareData += listItem.getApplicationName() + " " + PLAY_URL + listItem.getApplicationPackageName() + '\n';
+                }
                 break;
         }
+        sendIntent.putExtra(Intent.EXTRA_TEXT, shareData);
+        Log.d(TAG, shareData);
         sendIntent.putExtra(Intent.EXTRA_TITLE, "Installed Applications");
         sendIntent.setType("text/plain");
         sendIntent.setAction(Intent.ACTION_SEND);
@@ -183,8 +186,7 @@ public class AppListFragment extends Fragment {
      * @return
      */
     private boolean isSystemPackage(PackageInfo pkgInfo) {
-        return ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) ? true
-                : false;
+        return ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
     }
 }
 

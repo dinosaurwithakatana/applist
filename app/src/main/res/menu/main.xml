@@ -6,8 +6,14 @@
         android:title="@string/action_export"
         android:orderInCategory="100"
         android:showAsAction="never" />
+
     <item android:id="@+id/action_export_min"
           android:title="@string/action_export_min"
+          android:orderInCategory="100"
+          android:showAsAction="never" />
+
+    <item android:id="@+id/action_export_play_store"
+          android:title="@string/action_export_play_store"
           android:orderInCategory="100"
           android:showAsAction="never" />
 </menu>
