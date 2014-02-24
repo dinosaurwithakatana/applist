@@ -123,6 +123,7 @@ public class AppListFragment extends Fragment {
             case R.id.action_export:
                 Type myType = new TypeToken<ArrayList<AppListItem>>() {
                 }.getType();
+                shareData = mGson.toJson(mApplicationList, myType);
                 break;
             case R.id.action_export_min:
                 for(AppListItem listItem : mApplicationList){
