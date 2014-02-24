@@ -135,6 +135,11 @@ public class AppListFragment extends Fragment {
                     shareData += listItem.getApplicationName() + " " + PLAY_URL + listItem.getApplicationPackageName() + '\n';
                 }
                 break;
+            case R.id.action_export_markdown:
+                for(AppListItem listItem : mApplicationList){
+                    shareData += "* [" + listItem.getApplicationName() + "](" + PLAY_URL + listItem.getApplicationPackageName() + ")\n";
+                }
+                break;
         }
         sendIntent.putExtra(Intent.EXTRA_TEXT, shareData);
         Log.d(TAG, shareData);

@@ -7,6 +7,7 @@
     <string name="action_export">Export all data as JSON</string>
     <string name="action_export_min">Export Names</string>
     <string name="action_export_play_store">Export Names and Play Store links</string>
+    <string name="action_export_markdown">Export as markdown </string>
     <string name="ok">OK</string>
     <string name="first_run_popup"><b>Tap</b> to open the app\'s Play Store page \n\n<b>Long Press</b> to uninstall\n\nI suggest exporting the names to <b>Google Keep</b> or a similar program for now</string>
 

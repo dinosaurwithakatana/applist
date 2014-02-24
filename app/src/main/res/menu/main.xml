@@ -16,4 +16,9 @@
           android:title="@string/action_export_play_store"
           android:orderInCategory="100"
           android:showAsAction="never" />
+
+    <item android:id="@+id/action_export_markdown"
+          android:title="@string/action_export_markdown"
+          android:orderInCategory="100"
+          android:showAsAction="never" />
 </menu>
