@@ -132,7 +132,7 @@ public class AppListFragment extends Fragment {
                 break;
             case R.id.action_export_play_store:
                 for(AppListItem listItem : mApplicationList){
-                    shareData += listItem.getApplicationName() + " " + PLAY_URL + listItem.getApplicationPackageName() + '\n';
+                    shareData += "- " + listItem.getApplicationName() + "\n\t- " + PLAY_URL + listItem.getApplicationPackageName() + '\n';
                 }
                 break;
             case R.id.action_export_markdown:
