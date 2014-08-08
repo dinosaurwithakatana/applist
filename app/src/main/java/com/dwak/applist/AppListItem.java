@@ -1,6 +1,7 @@
 package com.dwak.applist;
 
 import android.graphics.drawable.Drawable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -54,5 +55,15 @@ public class AppListItem {
 
     public void setApplicationIconDrawable(Drawable applicationIconDrawable) {
         mApplicationIconDrawable = applicationIconDrawable;
+    }
+
+    @Override
+    public String toString() {
+        return "AppListItem{" +
+                "mApplicationName='" + mApplicationName + '\'' +
+                ", mApplicationIcon=" + mApplicationIcon +
+                ", mApplicationPackageName='" + mApplicationPackageName + '\'' +
+                ", mApplicationIconDrawable=" + mApplicationIconDrawable +
+                '}';
     }
 }

@@ -1,7 +1,9 @@
 package com.dwak.applist;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,28 +31,88 @@ import com.google.gson.reflect.TypeToken;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class AppListFragment extends Fragment {
-    private static final String TAG = AppListFragment.class.getSimpleName();
     public static final String FIRST_RUN = "first_run";
-    public static final int FILE_CODE = 12321;
+    public static final int FILE_EXPORT_CODE = 12321;
+    public static final int FILE_IMPORT_CODE = 12322;
+    private static final String TAG = AppListFragment.class.getSimpleName();
+    private final String PLAY_URL = "https://play.google.com/store/apps/details?id=";
+    private final int UNINSTALL = 1;
     private ListView mListView;
-    private ArrayList<AppListItem> mApplicationList;
+    private List<AppListItem> mApplicationList;
     private AppListAdapter mAdapter;
     private AppListCheckAdapter mCheckedAdapter;
     private ProgressBar mProgressBar;
     private Gson mGson;
-    private final String PLAY_URL = "https://play.google.com/store/apps/details?id=";
-    private final int UNINSTALL = 1;
     private boolean mIsCheckMode = false;
     private String mShareData;
+    private AppListFragmentListener mListener;
 
     public AppListFragment() {
+    }
+
+    public static AppListFragment newInstance(List<AppListItem> appListItems) {
+        AppListFragment appListFragment = new AppListFragment();
+        appListFragment.mApplicationList = appListItems;
+        return appListFragment;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == MainActivity.RESULT_OK) {
+            switch (requestCode) {
+                case UNINSTALL:
+                    new GetPackageList().execute();
+                    break;
+                case FILE_EXPORT_CODE:
+                    Uri exportUri = handleFileOperation(data);
+                    File jsonFile = new File(exportUri.getPath(), "applist.json");
+                    FileOutputStream outputStream;
+                    try {
+                        outputStream = new FileOutputStream(jsonFile);
+                        outputStream.write(mShareData.getBytes());
+                        outputStream.close();
+                        Toast.makeText(getActivity(), "File exported!", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case FILE_IMPORT_CODE:
+                    ProgressDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    final AlertDialog alertDialog = builder.setMessage("Loading items").create();
+                    Uri importUri = handleFileOperation(data);
+                    Log.d(TAG, importUri.getPath());
+                    Type listType = new TypeToken<List<AppListItem>>(){}.getType();
+                    List<AppListItem> appListItems = gsonFromJsonFile(importUri.getPath(), List.class, listType);
+                    Log.d(TAG, appListItems.toString());
+                    alertDialog.dismiss();
+                    mListener.onImport(appListItems);
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (AppListFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement AppListFragmentListener");
+        }
     }
 
     @Override
@@ -83,7 +147,15 @@ public class AppListFragment extends Fragment {
         mListView = (ListView) rootView.findViewById(R.id.listview);
         mListView.setVisibility(View.GONE);
         mListView.setFastScrollEnabled(true);
-        mApplicationList = new ArrayList<AppListItem>();
+        if (mApplicationList == null) {
+            mApplicationList = new ArrayList<AppListItem>();
+            new GetPackageList().execute();
+        }
+        else {
+            getActivity().setTitle("Import");
+            mProgressBar.setVisibility(View.GONE);
+            mListView.setVisibility(View.VISIBLE);
+        }
         mAdapter = new AppListAdapter(getActivity(), android.R.layout.simple_list_item_1, mApplicationList);
         mCheckedAdapter = new AppListCheckAdapter(getActivity(), android.R.layout.simple_list_item_multiple_choice, mApplicationList);
         mListView.setAdapter(mAdapter);
@@ -113,65 +185,13 @@ public class AppListFragment extends Fragment {
         final GsonBuilder builder = new GsonBuilder();
         builder.excludeFieldsWithoutExposeAnnotation();
         mGson = builder.create();
-        new GetPackageList().execute();
         return rootView;
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == MainActivity.RESULT_OK) {
-            switch (requestCode) {
-                case UNINSTALL:
-                    new GetPackageList().execute();
-                    break;
-                case FILE_CODE:
-                    Uri uri = null;
-                    if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
-                        // For JellyBean and above
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                            ClipData clip = data.getClipData();
-
-                            if (clip != null) {
-                                for (int i = 0; i < clip.getItemCount(); i++) {
-                                    uri = clip.getItemAt(i).getUri();
-                                    // Do something with the URI
-                                }
-                            }
-                            // For Ice Cream Sandwich
-                        }
-                        else {
-                            ArrayList<String> paths = data.getStringArrayListExtra
-                                    (FilePickerActivity.EXTRA_PATHS);
-
-                            if (paths != null) {
-                                for (String path : paths) {
-                                    uri = Uri.parse(path);
-                                    // Do something with the URI
-                                }
-                            }
-                        }
-
-                    }
-                    else {
-                        uri = data.getData();
-                        // Do something with the URI
-                    }
-
-                    if (uri != null) {
-                        File jsonFile = new File(uri.getPath(), "applist.json");
-                        FileOutputStream outputStream;
-                        try {
-                            outputStream = new FileOutputStream(jsonFile);
-                            outputStream.write(mShareData.getBytes());
-                            outputStream.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    break;
-            }
-        }
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     @Override
@@ -185,18 +205,13 @@ public class AppListFragment extends Fragment {
         }.getType();
 
         switch (id) {
-//            case R.id.action_check_items:
-//                mIsCheckMode = !mIsCheckMode;
-//                if (mIsCheckMode) {
-//                    mListView.setAdapter(mCheckedAdapter);
-//                    mCheckedAdapter.notifyDataSetChanged();
-//                }
-//                else{
-//                    mListView.setAdapter(mAdapter);
-//                    mAdapter.notifyDataSetChanged();
-//                }
-//                break;
             case R.id.action_import_json:
+                isShare = false;
+                Intent importIntent = new Intent(getActivity(), FilePickerActivity.class);
+                importIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+                importIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+                importIntent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+                startActivityForResult(importIntent, FILE_IMPORT_CODE);
                 break;
             case R.id.action_export_share:
                 mShareData = mGson.toJson(mApplicationList, myType);
@@ -206,14 +221,14 @@ public class AppListFragment extends Fragment {
                 mShareData = mGson.toJson(mApplicationList, myType);
                 isShare = false;
                 // This always works
-                Intent i = new Intent(getActivity(), FilePickerActivity.class);
+                Intent exportIntent = new Intent(getActivity(), FilePickerActivity.class);
                 // This works if you defined the intent filter
                 // Set these depending on your use case. These are the defaults.
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-                i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
+                exportIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+                exportIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, true);
+                exportIntent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
 
-                startActivityForResult(i, FILE_CODE);
+                startActivityForResult(exportIntent, FILE_EXPORT_CODE);
                 break;
             case R.id.action_export_min:
                 for (AppListItem listItem : mApplicationList) {
@@ -244,13 +259,81 @@ public class AppListFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    class GetPackageList extends AsyncTask<Void, Void, List<ApplicationInfo>> {
+    private Uri handleFileOperation(Intent data) {
+        Uri uri = null;
+        if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
+            // For JellyBean and above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                ClipData clip = data.getClipData();
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mApplicationList.clear();
+                if (clip != null) {
+                    for (int i = 0; i < clip.getItemCount(); i++) {
+                        uri = clip.getItemAt(i).getUri();
+                        // Do something with the URI
+                    }
+                }
+                // For Ice Cream Sandwich
+            }
+            else {
+                ArrayList<String> paths = data.getStringArrayListExtra
+                        (FilePickerActivity.EXTRA_PATHS);
+
+                if (paths != null) {
+                    for (String path : paths) {
+                        uri = Uri.parse(path);
+                        // Do something with the URI
+                    }
+                }
+            }
+
         }
+        else {
+            uri = data.getData();
+        }
+
+        if (uri != null) {
+            return uri;
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Return whether the given PackgeInfo represents a system package or not.
+     * User-installed packages (Market or otherwise) should not be denoted as
+     * system packages.
+     *
+     * @param pkgInfo
+     * @return
+     */
+    private boolean isSystemPackage(PackageInfo pkgInfo) {
+        return ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
+    }
+
+    private <T> T gsonFromJsonFile(final String filePath, Class<T> clazz, Type type) {
+        InputStream itemJson = null;
+        try {
+            itemJson = new FileInputStream(filePath);
+        } catch (IOException e) {
+            // TODO - assert if file does not exist (Log fatal)
+            e.printStackTrace();
+        }
+        Reader reader = new InputStreamReader(itemJson);
+
+        if(type!=null){
+            return mGson.fromJson(reader, type);
+        }
+        else {
+            return mGson.fromJson(reader, clazz);
+        }
+    }
+
+    public interface AppListFragmentListener {
+        void onImport(List<AppListItem> appListItems);
+    }
+
+    class GetPackageList extends AsyncTask<Void, Void, List<ApplicationInfo>> {
 
         @Override
         protected List<ApplicationInfo> doInBackground(Void... voids) {
@@ -267,6 +350,12 @@ public class AppListFragment extends Fragment {
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mApplicationList.clear();
+        }
+
+        @Override
         protected void onPostExecute(List<ApplicationInfo> applicationInfos) {
             super.onPostExecute(applicationInfos);
             Collections.sort(mApplicationList, new ApplicationComparator());
@@ -275,18 +364,5 @@ public class AppListFragment extends Fragment {
             mListView.setVisibility(View.VISIBLE);
         }
     }
-
-    /**
-     * Return whether the given PackgeInfo represents a system package or not.
-     * User-installed packages (Market or otherwise) should not be denoted as
-     * system packages.
-     *
-     * @param pkgInfo
-     * @return
-     */
-    private boolean isSystemPackage(PackageInfo pkgInfo) {
-        return ((pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
-    }
-
 }
 
