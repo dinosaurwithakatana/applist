@@ -1,0 +1,15 @@
+language: android
+jdk: oraclejdk7
+env:
+  matrix:
+    - ANDROID_TARGET=android-19  ANDROID_ABI=armeabi-v7a
+
+android:
+  components:
+    - build-tools-19.1
+
+before_script:
+    - cp keystore.properties.example keystore.properties
+    - cp local.properties.example local.properties
+
+script: ./gradlew clean assembleDebug
