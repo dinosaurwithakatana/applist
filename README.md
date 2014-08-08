@@ -1,6 +1,8 @@
 AppList
 =========
 
+[![Build Status](https://travis-ci.org/dinosaurwithakatana/applist.svg?branch=master)](https://travis-ci.org/dinosaurwithakatana/applist)
+
 ![Screenshot of the app](https://raw2.github.com/dinosaurwithakatana/applist/master/screenshots/Screenshot_2014-02-23-21-02-39.png)
 ![Screenshot of the app](https://raw2.github.com/dinosaurwithakatana/applist/master/screenshots/Screenshot_2014-02-23-21-03-14.png)
 ![Screenshot of the app](https://raw2.github.com/dinosaurwithakatana/applist/master/screenshots/Screenshot_2014-02-23-21-03-55.png)
