@@ -37,9 +37,10 @@ public class MainActivity extends Activity implements AppListFragment.AppListFra
 
     @Override
     public void onImport(List<AppListItem> appListItems) {
-        AppListFragment importFragment = AppListFragment.newInstance(appListItems);
+        AppListFragment importFragment = AppListFragment.newInstance(appListItems, true);
         getFragmentManager().beginTransaction()
                 .replace(R.id.container, importFragment)
+                .addToBackStack(null)
                 .commit();
     }
 }

@@ -58,13 +58,15 @@ public class AppListFragment extends Fragment {
     private boolean mIsCheckMode = false;
     private String mShareData;
     private AppListFragmentListener mListener;
+    private boolean mImport;
 
     public AppListFragment() {
     }
 
-    public static AppListFragment newInstance(List<AppListItem> appListItems) {
+    public static AppListFragment newInstance(List<AppListItem> appListItems, boolean isImport) {
         AppListFragment appListFragment = new AppListFragment();
         appListFragment.mApplicationList = appListItems;
+        appListFragment.mImport = isImport;
         return appListFragment;
     }
 
@@ -94,7 +96,8 @@ public class AppListFragment extends Fragment {
                     final AlertDialog alertDialog = builder.setMessage("Loading items").create();
                     Uri importUri = handleFileOperation(data);
                     Log.d(TAG, importUri.getPath());
-                    Type listType = new TypeToken<List<AppListItem>>(){}.getType();
+                    Type listType = new TypeToken<List<AppListItem>>() {
+                    }.getType();
                     List<AppListItem> appListItems = gsonFromJsonFile(importUri.getPath(), List.class, listType);
                     Log.d(TAG, appListItems.toString());
                     alertDialog.dismiss();
@@ -130,16 +133,16 @@ public class AppListFragment extends Fragment {
         boolean firstRun = sharedPreferences.getBoolean("first_run", true);
 
         if (firstRun) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage(R.string.first_run_popup);
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
+            new AlertDialog.Builder(getActivity())
+                    .setMessage(R.string.first_run_popup)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
+                        }
+                    })
+                    .create()
+                    .show();
             sharedPreferences.edit().putBoolean(FIRST_RUN, false).commit();
         }
         mProgressBar = (ProgressBar) rootView.findViewById(R.id.progress_bar);
@@ -169,18 +172,20 @@ public class AppListFragment extends Fragment {
             }
         });
 
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int position, long l) {
-                Uri packageUri = Uri.parse("package:" + mApplicationList.get(position).getApplicationPackageName());
-                Intent uninstallIntent =
-                        new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri);
-                startActivityForResult(uninstallIntent, UNINSTALL);
-                mProgressBar.setVisibility(View.VISIBLE);
-                mListView.setVisibility(View.GONE);
-                return false;
-            }
-        });
+        if(!mImport) {
+            mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int position, long l) {
+                    Uri packageUri = Uri.parse("package:" + mApplicationList.get(position).getApplicationPackageName());
+                    Intent uninstallIntent =
+                            new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri);
+                    startActivityForResult(uninstallIntent, UNINSTALL);
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    mListView.setVisibility(View.GONE);
+                    return false;
+                }
+            });
+        }
 
         final GsonBuilder builder = new GsonBuilder();
         builder.excludeFieldsWithoutExposeAnnotation();
@@ -321,7 +326,7 @@ public class AppListFragment extends Fragment {
         }
         Reader reader = new InputStreamReader(itemJson);
 
-        if(type!=null){
+        if (type != null) {
             return mGson.fromJson(reader, type);
         }
         else {
@@ -340,10 +345,14 @@ public class AppListFragment extends Fragment {
             final List<PackageInfo> packageList = getActivity().getPackageManager().getInstalledPackages(0);
             for (PackageInfo packageInfo : packageList) {
                 if (!isSystemPackage(packageInfo)) {
-                    mApplicationList.add(new AppListItem((String) packageInfo.applicationInfo.loadLabel(getActivity().getPackageManager()),
-                            packageInfo.applicationInfo.icon,
-                            packageInfo.packageName,
-                            packageInfo.applicationInfo.loadIcon(getActivity().getPackageManager())));
+                    mApplicationList.add(
+                            new AppListItem(
+                                    (String) packageInfo.applicationInfo.loadLabel(getActivity().getPackageManager()),
+                                    packageInfo.applicationInfo.icon,
+                                    packageInfo.packageName,
+                                    packageInfo.applicationInfo.loadIcon(getActivity().getPackageManager())
+                            )
+                    );
                 }
             }
             return null;
