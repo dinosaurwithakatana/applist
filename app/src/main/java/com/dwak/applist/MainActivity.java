@@ -1,6 +1,8 @@
 package com.dwak.applist;
 
 import android.app.Activity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 
@@ -12,6 +14,9 @@ public class MainActivity extends Activity implements AppListFragment.AppListFra
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        for (PackageInfo packageInfo : getPackageManager().getInstalledPackages(PackageManager.GET_ACTIVITIES)) {
+            AppListApplication.getInstance().addInstalledPackage(packageInfo.packageName, packageInfo);
+        }
         if (savedInstanceState == null) {
             AppListFragment appListFragment = new AppListFragment();
             getFragmentManager().beginTransaction()

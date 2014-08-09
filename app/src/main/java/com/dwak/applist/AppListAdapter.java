@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class AppListAdapter extends ArrayAdapter{
+public class AppListAdapter extends ArrayAdapter<AppListItem>{
     private final List<AppListItem> mItems;
     private final Context mContext;
 
@@ -19,15 +19,43 @@ public class AppListAdapter extends ArrayAdapter{
         mItems = items;
         mContext = context;
     }
+    private boolean isPackageInstalled(String packageName, Context context) {
+        return AppListApplication.getInstance().getInstalledPackages().containsKey(packageName);
+    }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View rowView = inflater.inflate(R.layout.list_item, parent, false);
-        TextView textView = (TextView) rowView.findViewById(R.id.item_name);
-        ImageView imageView = (ImageView) rowView.findViewById(R.id.item_icon);
-        textView.setText(mItems.get(position).getApplicationName());
-        imageView.setBackground(mItems.get(position).getApplicationIconDrawable());
-        return rowView;
+        ViewHolder viewHolder;
+        if(convertView == null){
+            convertView = inflater.inflate(R.layout.list_item, parent, false);
+            viewHolder = new ViewHolder(convertView);
+            convertView.setTag(viewHolder);
+        }
+        else {
+            viewHolder = (ViewHolder) convertView.getTag();
+        }
+        viewHolder.mTextView.setText(getItem(position).getApplicationName());
+        viewHolder.mImageView.setBackground(getItem(position).getApplicationIconDrawable());
+
+        if(!isPackageInstalled(getItem(position).getApplicationPackageName(), mContext)){
+            viewHolder.mRootView.setBackgroundColor(mContext.getResources().getColor(android.R.color.holo_red_light));
+        }
+        else {
+            viewHolder.mRootView.setBackgroundColor(mContext.getResources().getColor(android.R.color.transparent));
+        }
+        return convertView;
+    }
+
+    class ViewHolder{
+        View mRootView;
+        TextView mTextView;
+        ImageView mImageView;
+
+        ViewHolder(View view) {
+            mRootView = view;
+            mTextView = (TextView) view.findViewById(R.id.item_name);
+            mImageView = (ImageView) view.findViewById(R.id.item_icon);
+        }
     }
 }
