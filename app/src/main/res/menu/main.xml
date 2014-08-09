@@ -1,24 +1,56 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.dwak.applist.MainActivity" >
-    
-    <item android:id="@+id/action_export"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.dwak.applist.MainActivity">
+
+    <!--<item android:id="@+id/action_check_items"-->
+    <!--android:title="@string/action_check_items"-->
+    <!--android:icon="@drawable/ic_action_av_add_to_queue"-->
+    <!--android:orderInCategory="0"-->
+    <!--android:showAsAction="always"/>-->
+
+    <item
+        android:id="@+id/action_import_json"
+        android:title="@string/action_import_json"
+        android:icon="@drawable/ic_action_av_download"
+        android:orderInCategory="1"
+        android:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_export"
         android:title="@string/action_export"
+        android:orderInCategory="2"
+        android:icon="@drawable/ic_action_av_upload"
+        android:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_export_share"
+                android:title="@string/action_export_share"
+                android:orderInCategory="1"
+                android:showAsAction="never"/>
+            <item
+                android:id="@+id/action_export_file"
+                android:title="@string/action_export_file"
+                android:orderInCategory="2"
+                android:showAsAction="never"/>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_export_min"
+        android:title="@string/action_export_min"
         android:orderInCategory="100"
-        android:showAsAction="never" />
+        android:showAsAction="never"/>
 
-    <item android:id="@+id/action_export_min"
-          android:title="@string/action_export_min"
-          android:orderInCategory="100"
-          android:showAsAction="never" />
+    <item
+        android:id="@+id/action_export_play_store"
+        android:title="@string/action_export_play_store"
+        android:orderInCategory="100"
+        android:showAsAction="never"/>
 
-    <item android:id="@+id/action_export_play_store"
-          android:title="@string/action_export_play_store"
-          android:orderInCategory="100"
-          android:showAsAction="never" />
+    <item
+        android:id="@+id/action_export_markdown"
+        android:title="@string/action_export_markdown"
+        android:orderInCategory="100"
+        android:showAsAction="never"/>
 
-    <item android:id="@+id/action_export_markdown"
-          android:title="@string/action_export_markdown"
-          android:orderInCategory="100"
-          android:showAsAction="never" />
 </menu>

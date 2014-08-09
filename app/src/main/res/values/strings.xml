@@ -5,10 +5,15 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_export">Export all data as JSON</string>
+    <string name="action_export_share">Export JSON and share</string>
+    <string name="action_export_file">Export JSON as a file</string>
     <string name="action_export_min">Export Names</string>
     <string name="action_export_play_store">Export Names and Play Store links</string>
     <string name="action_export_markdown">Export as markdown </string>
     <string name="ok">OK</string>
     <string name="first_run_popup"><b>Tap</b> to open the app\'s Play Store page \n\n<b>Long Press</b> to uninstall\n\nI suggest exporting the names to <b>Google Keep</b> or a similar program for now</string>
+    <string name="action_import_json">Import from JSON</string>
+    <string name="action_check_items">Check Item Mode</string>
+    <string name="title_activity_app_list_import">AppListImportActivity</string>
 
 </resources>

@@ -2,14 +2,20 @@ language: android
 jdk: oraclejdk7
 env:
   matrix:
-    - ANDROID_TARGET=android-19  ANDROID_ABI=armeabi-v7a
-
+  - ANDROID_TARGET=android-19  ANDROID_ABI=armeabi-v7a
 android:
   components:
-    - build-tools-19.1.0
-
+  - build-tools-19.1.0
 before_script:
-    - cp keystore.properties.example keystore.properties
-    - cp local.properties.example local.properties
-
-script: ./gradlew clean assembleDebug
+- cp keystore.properties.example keystore.properties
+- cp local.properties.example local.properties
+script: "./gradlew clean assembleDebug"
+deploy:
+  provider: releases
+  api_key:
+    secure: iIBMVTQjD9wXxH0q044aIko7sX7P4Ai+UoVlaVajiNuKT57rHfrjtZzgMB1io9Jl4lQj6TzXAoJazCNMksT93SKaAwsNuKZXZFTE6Rn/LeW0++HVUZLetEmaJToI22wXIbcLvPN5G3r7erAtLEXYlwRUYV7TvzJ9OHjrR4xdQDo=
+  file: "${TRAVIS_BUILD_DIR}/app/build/outputs/apk/app-debug.apk"
+  on:
+    repo: dinosaurwithakatana/applist
+    tags: true
+    all_branches: true
