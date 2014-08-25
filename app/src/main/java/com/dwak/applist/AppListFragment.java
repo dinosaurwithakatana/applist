@@ -371,6 +371,7 @@ public class AppListFragment extends Fragment {
             mAdapter.notifyDataSetChanged();
             mProgressBar.setVisibility(View.GONE);
             mListView.setVisibility(View.VISIBLE);
+            getActivity().setTitle(mApplicationList.size() + " apps");
         }
     }
 }
