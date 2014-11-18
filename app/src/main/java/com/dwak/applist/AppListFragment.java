@@ -20,14 +20,15 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.melnykov.fab.FloatingActionButton;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import java.io.File;
@@ -49,7 +50,7 @@ public class AppListFragment extends Fragment {
     private static final String TAG = AppListFragment.class.getSimpleName();
     private final String PLAY_URL = "https://play.google.com/store/apps/details?id=";
     private final int UNINSTALL = 1;
-    private ListView mListView;
+    private AbsListView mListView;
     private List<AppListItem> mApplicationList;
     private AppListAdapter mAdapter;
     private AppListCheckAdapter mCheckedAdapter;
@@ -59,6 +60,7 @@ public class AppListFragment extends Fragment {
     private String mShareData;
     private AppListFragmentListener mListener;
     private boolean mImport;
+    private FloatingActionButton mFAB;
 
     public AppListFragment() {
     }
@@ -146,10 +148,36 @@ public class AppListFragment extends Fragment {
             sharedPreferences.edit().putBoolean(FIRST_RUN, false).commit();
         }
         mProgressBar = (ProgressBar) rootView.findViewById(R.id.progress_bar);
+        mFAB = (FloatingActionButton) rootView.findViewById(R.id.fabbutton);
+        mFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Type myType = new TypeToken<ArrayList<AppListItem>>() {
+                }.getType();
+                mShareData = mGson.toJson(mApplicationList, myType);
+                // This always works
+                Intent exportIntent = new Intent(getActivity(), FilePickerActivity.class);
+                // This works if you defined the intent filter
+                // Set these depending on your use case. These are the defaults.
+                exportIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+                exportIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, true);
+                exportIntent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
 
-        mListView = (ListView) rootView.findViewById(R.id.listview);
+                startActivityForResult(exportIntent, FILE_EXPORT_CODE);
+            }
+        });
+        mFAB.setLongClickable(true);
+        mFAB.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Toast.makeText(getActivity(), "Export JSON list to file", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+        mListView = (AbsListView) rootView.findViewById(R.id.listview);
         mListView.setVisibility(View.GONE);
         mListView.setFastScrollEnabled(true);
+        mFAB.attachToListView(mListView);
         if (mApplicationList == null) {
             mApplicationList = new ArrayList<AppListItem>();
             new GetPackageList().execute();
